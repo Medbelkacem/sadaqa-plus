@@ -66,9 +66,15 @@ export type ServerEnv = z.infer<typeof serverSchema>;
 let cached: ServerEnv | null = null;
 
 function read(): ServerEnv {
+  // Prefer the explicitly configured origin. On Vercel, fall back to the
+  // project's production URL so a first deploy works before a domain is set.
+  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : undefined;
+
   const parsed = serverSchema.safeParse({
     NODE_ENV: process.env.NODE_ENV,
-    APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
+    APP_URL: process.env.NEXT_PUBLIC_APP_URL || vercelUrl || 'http://localhost:3000',
     AUTH_SECRET: process.env.AUTH_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     REDIS_URL: process.env.REDIS_URL,

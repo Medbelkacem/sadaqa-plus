@@ -7,7 +7,12 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Runtime queries go through the connection pooler.
   url      = env("DATABASE_URL")
+  // Migrations need a direct (unpooled) connection: a transaction pooler
+  // cannot hold the session-level locks DDL requires. Falls back to
+  // DATABASE_URL when the deployment has no separate direct URL.
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 // ---------------------------------------------------------------------------
