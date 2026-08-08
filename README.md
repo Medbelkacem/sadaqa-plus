@@ -268,18 +268,40 @@ a donation cannot be confirmed without a payment provider.
 
 ### Vercel
 
-1. Import the repository.
-2. Add a PostgreSQL database (Neon or another Marketplace provider) — it sets
-   `DATABASE_URL`.
-3. Set the environment variables listed in `.env.example`. At minimum:
-   `AUTH_SECRET`, `DATABASE_URL`, `NEXT_PUBLIC_APP_URL`.
-4. Deploy. `npm run build` runs `prisma generate` first.
-5. Apply migrations against the production database:
-   ```bash
-   DATABASE_URL="<production url>" npx prisma migrate deploy
-   DATABASE_URL="<production url>" npm run db:seed
-   ```
-6. Create the first administrator (see above).
+```bash
+vercel link
+vercel integration add neon --plan free_v3 -m region=fra1        # DATABASE_URL
+vercel blob create-store <name> --access private --yes           # BLOB_READ_WRITE_TOKEN
+```
+
+Then set, at minimum:
+
+| Variable | Value |
+|---|---|
+| `AUTH_SECRET` | 48 random bytes, base64url |
+| `DIRECT_DATABASE_URL` | the provider's **unpooled** URL (migrations only) |
+| `NEXT_PUBLIC_APP_URL` | your production origin |
+| `STORAGE_DRIVER` | `blob` — the local driver loses files on serverless |
+| `CRON_SECRET` | 32 random bytes, base64url |
+
+Apply migrations with the **direct** URL before the first deploy, so the build
+can read reference data:
+
+```bash
+DATABASE_URL="<direct url>" DIRECT_DATABASE_URL="<direct url>" npx prisma migrate deploy
+DATABASE_URL="<direct url>" DIRECT_DATABASE_URL="<direct url>" npm run db:seed
+```
+
+Then `vercel deploy --prod` and create the first administrator (see above).
+
+**Before opening registration**, provision Redis and set `REDIS_URL`:
+
+```bash
+vercel integration add upstash/upstash-kv --plan free
+```
+
+Without it, rate limiting is per-instance — which on serverless means an
+attacker can spread login attempts across instances and largely evade it.
 
 ### Docker
 
@@ -327,8 +349,8 @@ consequence of each one being absent.
 | Service | Without it |
 |---|---|
 | **SMTP** | Emails are rendered to the server log. The outbox records the attempt; nothing claims delivery. |
-| **Redis** | Rate limiting falls back to a per-instance in-memory limiter. Not safe above one instance. |
-| **S3 storage** | Files are written to the local filesystem and streamed through the authorized route. |
+| **Redis** | Rate limiting falls back to a per-instance in-memory limiter. **Not meaningful on serverless**, where instances come and go — provision it before opening registration. |
+| **Object storage** | With `STORAGE_DRIVER=local`, files go to the local filesystem. On serverless that is ephemeral and uploads are silently lost — use `blob` or `s3` there. |
 | **Web Push** | Push is reported as unconfigured and the toggle is disabled. |
 | **Payment provider** | Online payment is disabled. Donation intents still work. No donation can reach `CONFIRMED`. |
 | **AI** | Moderation assistance is off. No automated decision is ever made about a request. |

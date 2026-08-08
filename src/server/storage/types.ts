@@ -14,7 +14,7 @@ export type StoredObject = {
 };
 
 export interface StorageDriver {
-  readonly name: 'local' | 's3';
+  readonly name: 'local' | 's3' | 'blob';
 
   put(key: string, body: Buffer, contentType: string): Promise<StoredObject>;
 

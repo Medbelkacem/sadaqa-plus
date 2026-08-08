@@ -29,7 +29,7 @@ const serverSchema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   REDIS_URL: optionalString,
 
-  STORAGE_DRIVER: z.enum(['local', 's3']).default('local'),
+  STORAGE_DRIVER: z.enum(['local', 's3', 'blob']).default('local'),
   STORAGE_LOCAL_DIR: z.string().default('.storage'),
   STORAGE_S3_BUCKET: optionalString,
   STORAGE_S3_REGION: optionalString,
@@ -124,7 +124,7 @@ export function integrationStatus() {
   const env = serverEnv();
   return {
     redis: Boolean(env.REDIS_URL),
-    objectStorage: env.STORAGE_DRIVER === 's3',
+    objectStorage: env.STORAGE_DRIVER === 's3' || env.STORAGE_DRIVER === 'blob',
     email: env.EMAIL_DRIVER === 'smtp' && Boolean(env.EMAIL_SERVER),
     push: Boolean(env.PUSH_PUBLIC_KEY && env.PUSH_PRIVATE_KEY),
     payments: env.PAYMENT_PROVIDER !== 'none' && Boolean(env.PAYMENT_PROVIDER_KEY),
