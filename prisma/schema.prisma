@@ -1404,6 +1404,22 @@ model SystemSetting {
   @@map("system_settings")
 }
 
+/**
+ * Distributed rate-limit buckets.
+ *
+ * Used when REDIS_URL is absent. Slower than Redis, but *correct* across
+ * instances — which an in-process counter is not on serverless, where every
+ * request may land on a fresh instance and the limit effectively disappears.
+ */
+model RateLimitBucket {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+
+  @@index([resetAt])
+  @@map("rate_limit_buckets")
+}
+
 model Testimonial {
   id          String    @id @default(uuid()) @db.Uuid
   authorName  String

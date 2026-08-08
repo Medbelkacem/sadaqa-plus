@@ -4,6 +4,7 @@ import { prisma } from '@/server/db/prisma';
 import { getSetting } from '@/server/services/reference.service';
 import { notify } from '@/server/services/notification.service';
 import { recordAudit } from '@/server/services/audit.service';
+import { pruneExpiredBuckets } from '@/server/rate-limit';
 
 /**
  * Scheduled maintenance jobs.
@@ -145,7 +146,7 @@ export async function cleanupExpiredRecords() {
   const now = new Date();
   const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
-  const [sessions, tokens, notifications, outbox] = await Promise.all([
+  const [sessions, tokens, notifications, outbox, rateLimitBuckets] = await Promise.all([
     prisma.session.deleteMany({
       where: { OR: [{ expiresAt: { lt: now } }, { revokedAt: { lt: ninetyDaysAgo } }] },
     }),
@@ -160,6 +161,8 @@ export async function cleanupExpiredRecords() {
     prisma.outboxMessage.deleteMany({
       where: { sentAt: { not: null, lt: ninetyDaysAgo } },
     }),
+    // Elapsed rate-limit windows: harmless but unbounded if never pruned.
+    pruneExpiredBuckets(),
   ]);
 
   return {
@@ -167,5 +170,6 @@ export async function cleanupExpiredRecords() {
     tokens: tokens.count,
     notifications: notifications.count,
     outbox: outbox.count,
+    rateLimitBuckets,
   };
 }

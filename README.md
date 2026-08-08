@@ -203,7 +203,7 @@ an id, role or ownership claim that arrived from the client.
 | Authorization | Server-derived roles and permissions on every request; the client's copy is display-only |
 | IDOR | Unauthorized records return **404**, not 403, so ids cannot be probed |
 | CSRF | `SameSite=Lax` plus an explicit `Origin` check on every mutation |
-| Rate limiting | Redis-backed, per surface; documented in-memory fallback when Redis is absent |
+| Rate limiting | Per surface, backed by Redis → PostgreSQL → in-memory, in that order. The first two are distributed; the third is reached only if the database is unreachable |
 | Brute force | Per-account failure counter with temporary lockout, plus per-IP and per-email limits |
 | Enumeration | Registration and password reset return identical responses regardless of account existence |
 | Uploads | Magic-byte sniffing, declared-vs-actual type mismatch rejected, polyglot detection, size cap, private by default |
@@ -294,14 +294,14 @@ DATABASE_URL="<direct url>" DIRECT_DATABASE_URL="<direct url>" npm run db:seed
 
 Then `vercel deploy --prod` and create the first administrator (see above).
 
-**Before opening registration**, provision Redis and set `REDIS_URL`:
+Redis is optional. Rate limiting works without it, backed by PostgreSQL. To
+add it for speed:
 
 ```bash
 vercel integration add upstash/upstash-kv --plan free
 ```
 
-Without it, rate limiting is per-instance — which on serverless means an
-attacker can spread login attempts across instances and largely evade it.
+(The Marketplace asks you to accept the provider's terms in a browser once.)
 
 ### Docker
 
@@ -349,7 +349,7 @@ consequence of each one being absent.
 | Service | Without it |
 |---|---|
 | **SMTP** | Emails are rendered to the server log. The outbox records the attempt; nothing claims delivery. |
-| **Redis** | Rate limiting falls back to a per-instance in-memory limiter. **Not meaningful on serverless**, where instances come and go — provision it before opening registration. |
+| **Redis** | Rate limiting falls back to the PostgreSQL store — still distributed and still correct, just slower (one round-trip per limited request). Redis is a performance upgrade, not a correctness one. |
 | **Object storage** | With `STORAGE_DRIVER=local`, files go to the local filesystem. On serverless that is ephemeral and uploads are silently lost — use `blob` or `s3` there. |
 | **Web Push** | Push is reported as unconfigured and the toggle is disabled. |
 | **Payment provider** | Online payment is disabled. Donation intents still work. No donation can reach `CONFIRMED`. |

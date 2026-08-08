@@ -13,7 +13,8 @@ type Status = {
 };
 
 const NOTES: Record<keyof Status, string> = {
-  redis: 'Limitation de débit distribuée. Sans Redis, la limite est par instance.',
+  redis:
+    'Limitation de débit rapide. Sans Redis, la limitation reste distribuée via PostgreSQL — correcte, simplement plus lente.',
   objectStorage:
     'Stockage objet durable (Vercel Blob ou S3). Sans lui, les fichiers sont écrits sur le disque local de l’instance — ce qui est éphémère en serverless.',
   email: 'Envoi SMTP réel. Sans lui, les e-mails sont écrits dans le journal serveur.',
