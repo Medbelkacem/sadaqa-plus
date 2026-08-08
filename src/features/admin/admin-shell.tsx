@@ -202,7 +202,7 @@ export function AdminShell({
             >
               {labels.backToSite}
             </Link>
-            <LanguageSwitcher />
+            <LanguageSwitcher className="hidden sm:inline-flex" />
             <ThemeToggle />
             <UserMenu />
           </div>

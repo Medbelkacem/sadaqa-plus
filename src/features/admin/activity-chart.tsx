@@ -15,12 +15,13 @@ export type ActivityPoint = { date: string; users: number; requests: number };
  * not justify shipping a runtime, and hand-drawing the marks keeps them inside
  * the design tokens in both themes.
  *
- * Series colours are the two brand hues, validated for categorical use against
- * both surfaces (light: #16A34A / #2563EB — CVD ΔE 30.3, normal ΔE 33.3;
- * dark: #1FA84F / #4A84F5 — CVD ΔE 26.7, normal ΔE 29.2; all within the
- * lightness band and above 3:1 contrast on their surface). Identity is never
- * carried by colour alone: each series also gets a legend key, a direct label
- * at its end, and a distinct line pattern.
+ * Series colours are the two brand hues — the green that gives and the amber
+ * that receives — validated for categorical use against both surfaces
+ * (light: #00795A / #E8A33D on cream — CVD ΔE 20.8, normal ΔE 31.1;
+ * dark: #25A074 / #C48420 on the dark surface — CVD ΔE 8.9, normal ΔE 18.7;
+ * both inside the lightness band and above 3:1 against their surface).
+ * Identity is never carried by colour alone: each series also gets a legend
+ * key, a direct label at its end, and a distinct line pattern.
  */
 export function ActivityChart({
   data,
@@ -56,8 +57,18 @@ export function ActivityChart({
   const ticks = Array.from({ length: yMax / step + 1 }, (_, index) => index * step);
 
   const series = [
-    { key: 'users' as const, label: labels.users, className: 'text-[#16A34A] dark:text-[#1FA84F]', dash: undefined },
-    { key: 'requests' as const, label: labels.requests, className: 'text-[#2563EB] dark:text-[#4A84F5]', dash: '6 4' },
+    {
+      key: 'users' as const,
+      label: labels.users,
+      className: 'text-[#00795A] dark:text-[#25A074]',
+      dash: undefined,
+    },
+    {
+      key: 'requests' as const,
+      label: labels.requests,
+      className: 'text-[#E8A33D] dark:text-[#C48420]',
+      dash: '6 4',
+    },
   ];
 
   const active = hover !== null ? data[hover] : null;

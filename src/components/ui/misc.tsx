@@ -202,10 +202,10 @@ export function Tooltip({
         <TooltipPrimitive.Content
           side={side}
           sideOffset={6}
-          className="z-50 max-w-64 rounded-lg bg-navy-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-[var(--shadow-lifted)] dark:bg-surface dark:text-foreground dark:ring-1 dark:ring-border"
+          className="z-50 max-w-64 rounded-lg bg-sadaqa-800 px-2.5 py-1.5 text-xs font-medium text-white shadow-[var(--shadow-lifted)] dark:bg-surface dark:text-foreground dark:ring-1 dark:ring-border"
         >
           {content}
-          <TooltipPrimitive.Arrow className="fill-navy-900 dark:fill-[var(--surface)]" />
+          <TooltipPrimitive.Arrow className="fill-sadaqa-800 dark:fill-[var(--surface)]" />
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Portal>
     </TooltipPrimitive.Root>

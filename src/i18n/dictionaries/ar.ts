@@ -79,6 +79,7 @@ export const ar: Dictionary = {
     about: 'من نحن',
     create: 'إنشاء',
     profile: 'الملف الشخصي',
+    account: 'الحساب',
     dashboard: 'لوحة التحكم',
     admin: 'الإدارة',
     notifications: 'الإشعارات',

@@ -491,17 +491,17 @@ export function renderTemplate(
     FOOTER[locale],
   ].join('\n');
 
-  const html = `<div dir="${dir}" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f8fafc;padding:32px 16px">
-  <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:32px">
-    <div style="font-size:18px;font-weight:700;color:#16a34a;margin-bottom:24px">Sadaqa<span style="color:#2563eb">+</span></div>
-    <h1 style="font-size:20px;line-height:1.4;color:#0f172a;margin:0 0 16px">${escapeHtml(heading)}</h1>
-    ${paragraphs.map((p) => `<p style="font-size:15px;line-height:1.7;color:#334155;margin:0 0 12px">${escapeHtml(p)}</p>`).join('\n    ')}
+  const html = `<div dir="${dir}" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#FBF8F2;padding:32px 16px">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E4DCCB;border-radius:16px;padding:32px">
+    <div style="font-size:18px;font-weight:700;color:#00795A;margin-bottom:24px">Sadaqa<span style="color:#E8A33D">+</span></div>
+    <h1 style="font-size:20px;line-height:1.4;color:#05372A;margin:0 0 16px">${escapeHtml(heading)}</h1>
+    ${paragraphs.map((p) => `<p style="font-size:15px;line-height:1.7;color:#3F4F48;margin:0 0 12px">${escapeHtml(p)}</p>`).join('\n    ')}
     ${
       cta
-        ? `<p style="margin:24px 0 0"><a href="${escapeHtml(cta.url)}" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 20px;border-radius:10px">${escapeHtml(cta.label)}</a></p>`
+        ? `<p style="margin:24px 0 0"><a href="${escapeHtml(cta.url)}" style="display:inline-block;background:#00795A;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 20px;border-radius:10px">${escapeHtml(cta.label)}</a></p>`
         : ''
     }
-    <p style="margin:32px 0 0;padding-top:16px;border-top:1px solid #e2e8f0;font-size:13px;color:#64748b">${escapeHtml(FOOTER[locale])}</p>
+    <p style="margin:32px 0 0;padding-top:16px;border-top:1px solid #E4DCCB;font-size:13px;color:#5B6B63">${escapeHtml(FOOTER[locale])}</p>
   </div>
 </div>`;
 

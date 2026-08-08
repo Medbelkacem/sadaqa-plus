@@ -6,64 +6,92 @@ import { useOptionalI18n } from '@/i18n/context';
 import { cn } from '@/lib/utils';
 
 /**
- * Sadaqa+ mark — two hands cupped into a heart around a crescent.
+ * Sadaqa+ symbol.
  *
- * Drawn as inline SVG rather than an image file so it inherits `currentColor`,
- * stays crisp at every size, needs no extra request, and works inside the
- * strict CSP. The gradient id is namespaced per instance to avoid collisions
- * when several marks render on one page.
+ * Two crossing bars: the green one gives, the amber one receives. Their
+ * intersection is the third colour — what the meeting produces. It is also
+ * the "+" of Sadaqa+.
+ *
+ * Drawn as inline SVG rather than an image so it inherits the theme, stays
+ * crisp at every size, costs no extra request, and needs no CSP exception.
  */
+
+/** Brand palette, from the identity spec. */
+const BRAND = {
+  deep: '#05372A', // Vert profond
+  green: '#00795A', // Vert Sadaqa
+  light: '#3FCF9B', // Vert clair
+  amber: '#E8A33D', // Ambre
+  cream: '#FBF8F2', // Crème
+} as const;
+
+export type LogoVariant =
+  /** Green + amber on a light ground. */
+  | 'default'
+  /** Light green + amber, for a dark or deep-green ground. */
+  | 'onDark'
+  /** Single-colour, for stamps, fax and one-colour print. */
+  | 'monochrome'
+  /** White vertical bar + amber, as inside the app-icon tile. */
+  | 'onBrand';
+
 export function LogoMark({
   className,
-  monochrome = false,
+  variant = 'default',
   title,
 }: {
   className?: string;
-  monochrome?: boolean;
+  variant?: LogoVariant;
   title?: string;
 }) {
-  const gradientId = React.useId();
+  const vertical =
+    variant === 'monochrome'
+      ? 'currentColor'
+      : variant === 'onDark'
+        ? BRAND.light
+        : variant === 'onBrand'
+          ? '#FFFFFF'
+          : BRAND.green;
+
+  const horizontal = variant === 'monochrome' ? 'currentColor' : BRAND.amber;
+
+  // The crossing square is the point of the mark, so it is drawn explicitly
+  // rather than relying on a blend mode that print and email would drop.
+  const intersection = variant === 'monochrome' ? '#FFFFFF' : BRAND.deep;
 
   return (
     <svg
       viewBox="0 0 48 48"
-      className={cn('size-8', className)}
+      className={cn('size-8 shrink-0', className)}
       role={title ? 'img' : 'presentation'}
       aria-label={title}
       aria-hidden={title ? undefined : true}
-      fill="none"
     >
-      {!monochrome && (
-        <defs>
-          <linearGradient id={gradientId} x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#16A34A" />
-            <stop offset="1" stopColor="#2563EB" />
-          </linearGradient>
-        </defs>
-      )}
-
-      {/* Left hand / heart lobe */}
-      <path
-        d="M24 41.2 9.6 27.6a8.9 8.9 0 0 1-.5-12.3 8.4 8.4 0 0 1 12.2-.3L24 17.5"
-        stroke={monochrome ? 'currentColor' : `url(#${gradientId})`}
-        strokeWidth="3.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* Right hand / heart lobe */}
-      <path
-        d="M24 41.2l14.4-13.6a8.9 8.9 0 0 0 .5-12.3 8.4 8.4 0 0 0-12.2-.3L24 17.5"
-        stroke={monochrome ? 'currentColor' : `url(#${gradientId})`}
-        strokeWidth="3.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* Crescent held between the hands */}
-      <path
-        d="M28.4 24.3a5.9 5.9 0 1 1-5.2-8.2 4.8 4.8 0 1 0 5.2 8.2Z"
-        fill={monochrome ? 'currentColor' : `url(#${gradientId})`}
-      />
+      {/* Amber bar — the one that receives. */}
+      <rect x="7" y="18.5" width="34" height="11" rx="5.5" fill={horizontal} />
+      {/* Green bar — the one that gives. */}
+      <rect x="18.5" y="7" width="11" height="34" rx="5.5" fill={vertical} />
+      {/* What the meeting produces. */}
+      <rect x="18.5" y="18.5" width="11" height="11" fill={intersection} />
     </svg>
+  );
+}
+
+/**
+ * App-icon lock-up: the mark inside its rounded brand tile.
+ * Used where the symbol needs its own ground (install prompt, empty states).
+ */
+export function LogoTile({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        'inline-grid size-10 shrink-0 place-items-center rounded-[22%]',
+        className,
+      )}
+      style={{ backgroundColor: BRAND.green }}
+    >
+      <LogoMark variant="onBrand" className="size-[70%]" />
+    </span>
   );
 }
 
@@ -71,18 +99,18 @@ export function LogoMark({
  * Full lock-up: mark plus wordmark.
  *
  * The wordmark is the Arabic form in Arabic and the Latin form elsewhere, and
- * each is wrapped in its own direction. Without that, bidi reordering renders
- * the Latin wordmark as "+Sadaqa" on an RTL page — the `+` is neutral, so it
- * takes the paragraph direction rather than the word's.
+ * each carries its own direction. Without that, bidi reordering renders the
+ * Latin wordmark as "+Sadaqa" on an RTL page — the `+` is a neutral character,
+ * so it takes the paragraph direction rather than the word's.
  */
 export function Logo({
   className,
   compact = false,
-  monochrome = false,
+  variant = 'default',
 }: {
   className?: string;
   compact?: boolean;
-  monochrome?: boolean;
+  variant?: LogoVariant;
 }) {
   const i18n = useOptionalI18n();
   const isArabic = i18n?.locale === 'ar';
@@ -90,16 +118,23 @@ export function Logo({
 
   return (
     <span className={cn('inline-flex items-center gap-2', className)}>
-      <LogoMark monochrome={monochrome} title={isArabic ? 'صدقة+' : 'Sadaqa+'} />
+      <LogoMark variant={variant} title={isArabic ? 'صدقة+' : 'Sadaqa+'} />
       {!compact && (
         <span
           dir={isArabic ? 'rtl' : 'ltr'}
           className="text-lg font-bold tracking-tight text-foreground"
         >
           {name}
-          <span className={monochrome ? 'text-foreground' : 'text-primary'}>+</span>
+          <span
+            className={variant === 'monochrome' ? 'text-foreground' : undefined}
+            style={variant === 'monochrome' ? undefined : { color: BRAND.amber }}
+          >
+            +
+          </span>
         </span>
       )}
     </span>
   );
 }
+
+export { BRAND };

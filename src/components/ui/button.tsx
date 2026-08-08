@@ -11,8 +11,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'bg-primary text-primary-fg shadow-[0_1px_2px_rgb(15_23_42/0.08)] hover:bg-emerald-600 dark:hover:bg-emerald-400',
-        accent: 'bg-accent text-accent-fg hover:bg-royal-600 dark:hover:bg-royal-400',
+          'bg-primary text-primary-fg shadow-[0_1px_2px_rgb(5_55_42/0.10)] hover:bg-sadaqa-600 dark:hover:bg-sadaqa-300',
+        // Amber only reaches 2:1 against the cream ground, so a filled amber
+        // control gets an explicit darker border to carry its boundary. On dark
+        // grounds --accent-border resolves to amber itself and the border
+        // disappears into the fill.
+        accent:
+          'bg-accent text-accent-fg border border-accent-border hover:bg-amber-300 dark:hover:bg-amber-300',
         secondary:
           'bg-surface-muted text-foreground border border-border hover:bg-surface-sunken hover:border-border-strong',
         outline:

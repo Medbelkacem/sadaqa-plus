@@ -27,7 +27,9 @@ export function MobileNav() {
     { path: '/requests/new', label: t.nav.create, icon: PlusCircle },
     {
       path: authenticated ? '/dashboard' : '/auth/login',
-      label: authenticated ? t.nav.profile : t.nav.login,
+      // A five-cell bar gives each label ~78px at 390px, so the labels here
+      // are short by design — 'Se connecter' would be clipped.
+      label: authenticated ? t.nav.profile : t.nav.account,
       icon: User,
     },
   ];

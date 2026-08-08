@@ -91,17 +91,17 @@ export function MapView() {
     const entries: { marker: Marker; kind: keyof MapPayload; color: string }[] = [];
     if (layers.requests) {
       for (const marker of data.requests) {
-        entries.push({ marker, kind: 'requests', color: marker.category.color ?? '#DC2626' });
+        entries.push({ marker, kind: 'requests', color: marker.category.color ?? '#C62828' });
       }
     }
     if (layers.campaigns) {
       for (const marker of data.campaigns) {
-        entries.push({ marker, kind: 'campaigns', color: marker.category.color ?? '#2563EB' });
+        entries.push({ marker, kind: 'campaigns', color: marker.category.color ?? '#E8A33D' });
       }
     }
     if (layers.events) {
       for (const marker of data.events) {
-        entries.push({ marker, kind: 'events', color: marker.category.color ?? '#16A34A' });
+        entries.push({ marker, kind: 'events', color: marker.category.color ?? '#00795A' });
       }
     }
     return entries;
@@ -157,22 +157,22 @@ export function MapView() {
         </p>
       </aside>
 
-      <div className="min-h-[28rem] overflow-hidden rounded-[var(--radius-card)] border border-border">
+      <div className="overflow-hidden rounded-[var(--radius-card)] border border-border">
         {isLoading ? (
-          <div className="h-[32rem] animate-pulse bg-surface-sunken" aria-hidden="true" />
+          <div className="h-[min(70dvh,32rem)] min-h-80 animate-pulse bg-surface-sunken" aria-hidden="true" />
         ) : totalMarkers === 0 ? (
           <EmptyState
             icon={MapPinOff}
             title={t.empty.mapTitle}
             description={t.empty.mapBody}
-            className="h-[32rem] rounded-none border-0"
+            className="h-[min(70dvh,32rem)] min-h-80 rounded-none border-0"
           />
         ) : (
           <MapContainer
             center={ALGERIA_CENTER}
             zoom={ALGERIA_ZOOM}
             scrollWheelZoom
-            className="h-[32rem] w-full"
+            className="h-[min(70dvh,32rem)] min-h-80 w-full"
             // Announced as a region so keyboard users know what they entered.
             aria-label={t.map.title}
           >

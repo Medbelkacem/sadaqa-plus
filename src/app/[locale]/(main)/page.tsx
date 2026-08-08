@@ -62,38 +62,53 @@ export default async function HomePage({
 
   return (
     <>
-      {/* --- Hero ---------------------------------------------------------- */}
-      <section className="relative overflow-hidden border-b border-border">
+      {/* --- Hero -----------------------------------------------------------
+          The brand's deep-green panel: cream type, the "+" pattern behind it,
+          amber for the primary invitation. Amber only reaches 2:1 against a
+          light ground, which is exactly why the identity puts it here. */}
+      <section className="relative overflow-hidden bg-sadaqa-800 text-cream-100">
+        <div aria-hidden="true" className="plus-pattern pointer-events-none absolute inset-0" />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_32rem_at_50%_-8rem,var(--primary-soft),transparent_70%)] opacity-90"
+          className="pointer-events-none absolute -end-24 -top-24 hidden size-[34rem] rounded-full bg-sadaqa-700/50 blur-[1px] lg:block"
         />
-        <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted-fg">
-              <Sparkles className="size-3.5 text-primary" aria-hidden="true" />
+
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
+          <div className="max-w-3xl">
+            <p className="inline-flex items-center gap-2 rounded-full border border-cream-100/20 bg-cream-100/5 px-3 py-1 text-xs font-medium text-cream-100/80">
+              <Sparkles className="size-3.5 text-amber-400" aria-hidden="true" />
               {t.brand.name} · {t.footer.builtIn}
             </p>
 
-            <h1 className="mt-6 text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-6xl">
+            <h1 className="mt-6 text-[2.125rem] font-bold leading-[1.08] tracking-tight text-cream-100 sm:text-5xl lg:text-6xl">
               {t.home.heroTitle}
             </h1>
 
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-fg sm:text-lg">
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-cream-100/75 sm:text-lg">
               {t.brand.description}
             </p>
 
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button asChild size="lg" className="w-full sm:w-auto">
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Button asChild size="lg" variant="accent" className="w-full sm:w-auto">
+                <Link href={href('/requests/new')}>{t.home.heroCtaSecondary}</Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="w-full border-cream-100/40 text-cream-100 hover:bg-cream-100/10 sm:w-auto"
+              >
                 <Link href={href('/requests')}>
                   {t.home.heroCta}
                   <ArrowRight className="rtl:rotate-180" aria-hidden="true" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto">
-                <Link href={href('/requests/new')}>{t.home.heroCtaSecondary}</Link>
-              </Button>
-              <Button asChild size="lg" variant="ghost" className="w-full sm:w-auto">
+              <Button
+                asChild
+                size="lg"
+                variant="ghost"
+                className="w-full text-cream-100 hover:bg-cream-100/10 sm:w-auto"
+              >
                 <Link href={href('/volunteer')}>{t.home.heroCtaTertiary}</Link>
               </Button>
             </div>

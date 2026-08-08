@@ -8,39 +8,48 @@
 /* ---------------------------------------------------------------------------
    Sadaqa+ design tokens
 
-   Two brand hues carry the whole system:
-     emerald  — action, growth, "good happening"
-     blue     — trust, verification, institutional
-   Navy is the ink; everything else is a neutral ramp tuned to sit calmly
-   behind humanitarian content rather than compete with it.
+   From the brand identity. The symbol is two crossing bars — the green one
+   gives, the amber one receives, and their intersection is the third colour.
+   The interface follows the same logic: green carries action, amber carries
+   invitation, deep green is the ink, cream is the ground.
+
+     Vert profond  #05372A
+     Vert Sadaqa   #00795A
+     Vert clair    #3FCF9B
+     Ambre         #E8A33D
+     Crème         #FBF8F2
 --------------------------------------------------------------------------- */
 
 @theme {
-  --color-emerald-50: #ecfdf3;
-  --color-emerald-100: #d1fae0;
-  --color-emerald-200: #a7f3c5;
-  --color-emerald-300: #6ee7a5;
-  --color-emerald-400: #34d37f;
-  --color-emerald-500: #16a34a;
-  --color-emerald-600: #128a3f;
-  --color-emerald-700: #106f34;
-  --color-emerald-800: #0f582c;
-  --color-emerald-900: #0d4826;
+  /* Green ramp, built around the three brand greens. */
+  --color-sadaqa-50: #e8f5f0;
+  --color-sadaqa-100: #c9e9de;
+  --color-sadaqa-200: #97d6c2;
+  --color-sadaqa-300: #5fc3a4;
+  --color-sadaqa-400: #3fcf9b; /* Vert clair */
+  --color-sadaqa-500: #00795a; /* Vert Sadaqa */
+  --color-sadaqa-600: #006b4f;
+  --color-sadaqa-700: #055743;
+  --color-sadaqa-800: #05372a; /* Vert profond */
+  --color-sadaqa-900: #032418;
 
-  --color-royal-50: #eff5ff;
-  --color-royal-100: #dbe8fe;
-  --color-royal-200: #bfd6fe;
-  --color-royal-300: #93bbfd;
-  --color-royal-400: #6096fa;
-  --color-royal-500: #2563eb;
-  --color-royal-600: #1d4fd7;
-  --color-royal-700: #1a3fae;
-  --color-royal-800: #1b378a;
-  --color-royal-900: #1b326e;
+  /* Amber ramp. 600 is the darkest step that still reads as amber and is the
+     one used for boundaries on light grounds — see --accent-border. */
+  --color-amber-50: #fdf6ea;
+  --color-amber-100: #fbebd2;
+  --color-amber-200: #f5d5a0;
+  --color-amber-300: #efbe6e;
+  --color-amber-400: #e8a33d; /* Ambre */
+  --color-amber-500: #d48f26;
+  --color-amber-600: #b87a18;
+  --color-amber-700: #96620f;
+  --color-amber-800: #744c0c;
+  --color-amber-900: #4a3008;
 
-  --color-navy-950: #0b1220;
-  --color-navy-900: #0f172a;
-  --color-navy-800: #16203a;
+  --color-cream-50: #fdfcf9;
+  --color-cream-100: #fbf8f2; /* Crème */
+  --color-cream-200: #f5f0e5;
+  --color-cream-300: #ebe4d4;
 
   --font-sans:
     var(--font-inter), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -50,8 +59,8 @@
   --radius-card: 1rem;
   --radius-field: 0.625rem;
 
-  --shadow-soft: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 4px 16px -4px rgb(15 23 42 / 0.08);
-  --shadow-lifted: 0 2px 4px 0 rgb(15 23 42 / 0.04), 0 12px 32px -8px rgb(15 23 42 / 0.14);
+  --shadow-soft: 0 1px 2px 0 rgb(5 55 42 / 0.05), 0 4px 16px -4px rgb(5 55 42 / 0.08);
+  --shadow-lifted: 0 2px 4px 0 rgb(5 55 42 / 0.05), 0 12px 32px -8px rgb(5 55 42 / 0.16);
 
   --animate-fade-up: fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-shimmer: shimmer 1.6s linear infinite;
@@ -78,92 +87,99 @@
 }
 
 /* --- Semantic surface tokens ---------------------------------------------
-   Defined as raw values on :root, redefined under .dark. Dark mode is a
-   separately tuned palette, not an inversion: surfaces stay slightly blue to
-   match the navy ink, and the brand greens are lifted so they keep contrast
-   against a dark ground.
+   Dark mode is a separately chosen palette, not an inversion: the ground goes
+   to a very deep green rather than neutral black, so the brand green stays
+   the same hue family and the amber stays warm against it.
 -------------------------------------------------------------------------- */
 
 :root {
-  --background: #ffffff;
+  --background: #fbf8f2; /* Crème */
   --surface: #ffffff;
-  --surface-muted: #f8fafc;
-  --surface-sunken: #f1f5f9;
-  --foreground: #0f172a;
-  --muted-foreground: #576076;
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --ring: #16a34a;
+  --surface-muted: #f5f0e5;
+  --surface-sunken: #ebe4d4;
+  --foreground: #05372a; /* Vert profond — the ink */
+  --muted-foreground: #5b6b63;
+  --border: #e4dccb;
+  --border-strong: #cfc4ac;
+  --ring: #00795a;
 
-  --primary: #16a34a;
+  --primary: #00795a; /* Vert Sadaqa */
   --primary-foreground: #ffffff;
-  --primary-soft: #ecfdf3;
-  --primary-soft-foreground: #106f34;
+  --primary-soft: #e8f5f0;
+  --primary-soft-foreground: #05372a;
 
-  --accent: #2563eb;
-  --accent-foreground: #ffffff;
-  --accent-soft: #eff5ff;
-  --accent-soft-foreground: #1a3fae;
+  --accent: #e8a33d; /* Ambre */
+  --accent-foreground: #05372a;
+  /* Amber sits at only 2.03:1 against cream, so a filled amber control cannot
+     carry its own boundary on a light ground. This darker step does (3.4:1),
+     and is applied as a border rather than changing the fill. */
+  --accent-border: #b87a18;
+  --accent-soft: #fdf6ea;
+  --accent-soft-foreground: #96620f;
 
-  --danger: #dc2626;
+  --danger: #c62828;
   --danger-foreground: #ffffff;
-  --danger-soft: #fef2f2;
-  --danger-soft-foreground: #b31616;
+  --danger-soft: #fdecea;
+  --danger-soft-foreground: #9b1c13;
 
-  --warning: #b45309;
-  --warning-soft: #fffbeb;
-  --warning-soft-foreground: #92400e;
+  /* Deliberately orange-red, not amber: warning must never be mistaken for
+     the brand accent. */
+  --warning: #c2410c;
+  --warning-soft: #fff1e9;
+  --warning-soft-foreground: #9a3412;
 
-  --success: #15803d;
-  --success-soft: #f0fdf4;
-  --success-soft-foreground: #14532d;
+  --success: #00795a;
+  --success-soft: #e8f5f0;
+  --success-soft-foreground: #05372a;
 
   --info: #0369a1;
-  --info-soft: #f0f9ff;
+  --info-soft: #eaf4fb;
   --info-soft-foreground: #075985;
 
-  --overlay: rgb(15 23 42 / 0.55);
+  --overlay: rgb(5 55 42 / 0.55);
 }
 
 .dark {
-  --background: #0b1220;
-  --surface: #111a2e;
-  --surface-muted: #16203a;
-  --surface-sunken: #0e1729;
-  --foreground: #e9eef7;
-  --muted-foreground: #97a3ba;
-  --border: #24304c;
-  --border-strong: #33415f;
-  --ring: #34d37f;
+  --background: #04231b;
+  --surface: #0a3327;
+  --surface-muted: #0f4033;
+  --surface-sunken: #072a21;
+  --foreground: #f2efe7; /* Crème, lifted */
+  --muted-foreground: #9cb5aa;
+  --border: #17493a;
+  --border-strong: #256a59;
+  --ring: #3fcf9b;
 
-  --primary: #22b85a;
-  --primary-foreground: #04140a;
-  --primary-soft: #10281b;
-  --primary-soft-foreground: #6ee7a5;
+  --primary: #3fcf9b; /* Vert clair carries action on dark */
+  --primary-foreground: #04231b;
+  --primary-soft: #0d3d30;
+  --primary-soft-foreground: #7fe3be;
 
-  --accent: #4a84f5;
-  --accent-foreground: #050c1c;
-  --accent-soft: #14213f;
-  --accent-soft-foreground: #93bbfd;
+  --accent: #e8a33d;
+  --accent-foreground: #04231b;
+  /* Amber already clears 3:1 against the dark ground, so no extra border. */
+  --accent-border: #e8a33d;
+  --accent-soft: #3a2a10;
+  --accent-soft-foreground: #efbe6e;
 
-  --danger: #f05252;
-  --danger-foreground: #1a0505;
-  --danger-soft: #351417;
+  --danger: #f87171;
+  --danger-foreground: #2a0b0b;
+  --danger-soft: #3a1616;
   --danger-soft-foreground: #fca5a5;
 
-  --warning: #eab308;
-  --warning-soft: #3a2a08;
-  --warning-soft-foreground: #fde68a;
+  --warning: #fb923c;
+  --warning-soft: #3a2412;
+  --warning-soft-foreground: #fdba74;
 
-  --success: #34d37f;
-  --success-soft: #10281b;
-  --success-soft-foreground: #a7f3c5;
+  --success: #3fcf9b;
+  --success-soft: #0d3d30;
+  --success-soft-foreground: #7fe3be;
 
   --info: #38bdf8;
-  --info-soft: #0c2537;
+  --info-soft: #0b2c3d;
   --info-soft-foreground: #bae6fd;
 
-  --overlay: rgb(2 6 16 / 0.7);
+  --overlay: rgb(2 15 11 / 0.75);
 }
 
 /* Expose the semantic tokens to Tailwind so `bg-surface`, `text-muted-fg`,
@@ -186,6 +202,7 @@
 
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-foreground);
+  --color-accent-border: var(--accent-border);
   --color-accent-soft: var(--accent-soft);
   --color-accent-soft-fg: var(--accent-soft-foreground);
 
@@ -308,6 +325,18 @@
   .scrollbar-slim {
     scrollbar-width: thin;
     scrollbar-color: var(--border-strong) transparent;
+  }
+
+  /*
+   * The brand's "+" pattern, used behind deep-green hero panels.
+   * Drawn with gradients rather than an image so it costs no request and
+   * inherits the surrounding colour.
+   */
+  .plus-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='%23FBF8F2' transform='rotate(12 32 32)'%3E%3Crect x='28.5' y='18' width='7' height='28' rx='3.5'/%3E%3Crect x='18' y='28.5' width='28' height='7' rx='3.5'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 64px 64px;
+    background-repeat: repeat;
+    opacity: 0.07;
   }
 }
 

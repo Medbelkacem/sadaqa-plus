@@ -79,6 +79,7 @@ export const en: Dictionary = {
     about: 'About',
     create: 'Create',
     profile: 'Profile',
+    account: 'Account',
     dashboard: 'Dashboard',
     admin: 'Administration',
     notifications: 'Notifications',

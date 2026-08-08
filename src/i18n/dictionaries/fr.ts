@@ -82,6 +82,7 @@ export const fr = {
     about: 'À propos',
     create: 'Créer',
     profile: 'Profil',
+    account: 'Compte',
     dashboard: 'Tableau de bord',
     admin: 'Administration',
     notifications: 'Notifications',

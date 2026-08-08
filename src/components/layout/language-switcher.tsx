@@ -25,7 +25,18 @@ function persistLocale(next: AppLocale) {
   document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=${oneYear}; samesite=lax`;
 }
 
-export function LanguageSwitcher({ className }: { className?: string }) {
+export function LanguageSwitcher({
+  className,
+  showLabel = false,
+}: {
+  className?: string;
+  /**
+   * Show the language name beside the icon. Off in the header bar, where the
+   * label costs ~60px the chrome does not have below 1536px; on in the drawer,
+   * where there is room and the extra clarity helps.
+   */
+  showLabel?: boolean;
+}) {
   const { locale, t } = useI18n();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -51,7 +62,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         aria-label={t.common.language}
       >
         <Languages className="size-[18px]" aria-hidden="true" />
-        <span className="hidden sm:inline">{LOCALE_META[locale].nativeLabel}</span>
+        {showLabel ? <span>{LOCALE_META[locale].nativeLabel}</span> : null}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {LOCALES.map((code) => (

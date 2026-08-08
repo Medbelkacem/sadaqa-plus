@@ -21,7 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <Logo />
         </Link>
         <div className="flex items-center gap-1">
-          <LanguageSwitcher />
+          <LanguageSwitcher showLabel />
           <ThemeToggle />
         </div>
       </header>
