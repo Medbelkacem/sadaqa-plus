@@ -1,5 +1,8 @@
+'use client';
+
 import * as React from 'react';
 
+import { useOptionalI18n } from '@/i18n/context';
 import { cn } from '@/lib/utils';
 
 /**
@@ -64,6 +67,14 @@ export function LogoMark({
   );
 }
 
+/**
+ * Full lock-up: mark plus wordmark.
+ *
+ * The wordmark is the Arabic form in Arabic and the Latin form elsewhere, and
+ * each is wrapped in its own direction. Without that, bidi reordering renders
+ * the Latin wordmark as "+Sadaqa" on an RTL page — the `+` is neutral, so it
+ * takes the paragraph direction rather than the word's.
+ */
 export function Logo({
   className,
   compact = false,
@@ -73,12 +84,19 @@ export function Logo({
   compact?: boolean;
   monochrome?: boolean;
 }) {
+  const i18n = useOptionalI18n();
+  const isArabic = i18n?.locale === 'ar';
+  const name = isArabic ? 'صدقة' : 'Sadaqa';
+
   return (
     <span className={cn('inline-flex items-center gap-2', className)}>
-      <LogoMark monochrome={monochrome} title="Sadaqa+" />
+      <LogoMark monochrome={monochrome} title={isArabic ? 'صدقة+' : 'Sadaqa+'} />
       {!compact && (
-        <span className="text-lg font-bold tracking-tight text-foreground">
-          Sadaqa
+        <span
+          dir={isArabic ? 'rtl' : 'ltr'}
+          className="text-lg font-bold tracking-tight text-foreground"
+        >
+          {name}
           <span className={monochrome ? 'text-foreground' : 'text-primary'}>+</span>
         </span>
       )}

@@ -47,6 +47,15 @@ export function useI18n(): I18nValue {
   return context;
 }
 
+/**
+ * Same as `useI18n`, but returns null instead of throwing when there is no
+ * provider — for components that may render outside the localized tree, such
+ * as the logo on a global error page.
+ */
+export function useOptionalI18n(): I18nValue | null {
+  return React.useContext(I18nContext);
+}
+
 /** Prefixes a path with the active locale: `href('/requests')` → `/fr/requests`. */
 export function useLocalizedHref() {
   const { locale } = useI18n();
