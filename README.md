@@ -299,14 +299,22 @@ standalone output plus the Prisma migrations.
 
 Four endpoints, each guarded by `CRON_SECRET`:
 
-| Path | Suggested schedule | Does |
+| Path | Ideal schedule | Does |
 |---|---|---|
 | `/api/cron/reminders` | hourly | Reminds participants 24–48h before an event |
-| `/api/cron/expire` | daily | Expires stale requests, closes finished campaigns and events |
 | `/api/cron/outbox` | every 15 min | Retries undelivered transactional email |
+| `/api/cron/expire` | daily | Expires stale requests, closes finished campaigns and events |
 | `/api/cron/cleanup` | daily | Removes expired sessions, consumed tokens, old read notifications |
 
 Call with `Authorization: Bearer $CRON_SECRET`.
+
+`vercel.json` currently schedules **all four daily**, because a Vercel Hobby
+account cannot run a cron more than once per day. The reminder job still works
+— it looks 24–48h ahead, so a single daily run covers the whole window — but
+the outbox retry is slower to recover from an SMTP outage than it should be.
+On a Pro plan, restore `0 * * * *` for `reminders` and `*/15 * * * *` for
+`outbox`. Any external scheduler hitting the same URLs with the bearer token
+works equally well.
 
 ---
 

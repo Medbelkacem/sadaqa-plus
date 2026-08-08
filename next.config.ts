@@ -1,9 +1,10 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Emits a self-contained server bundle for the Docker runtime stage.
-  // Harmless on Vercel, which uses its own output tracing.
-  output: 'standalone',
+  // Standalone output is what the Docker runtime stage copies. Vercel does its
+  // own output tracing and its build pipeline conflicts with standalone, so it
+  // is enabled everywhere except there.
+  ...(process.env.VERCEL ? {} : { output: 'standalone' as const }),
 
   reactStrictMode: true,
 

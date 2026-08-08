@@ -1,0 +1,16 @@
+# Never upload local secrets or local-only artefacts to the build.
+# Environment variables come from the project settings, not from a file.
+.env
+.env.*
+!.env.example
+
+.storage
+playwright-report
+test-results
+blob-report
+coverage
+.server.pid
+
+Dockerfile
+docker-compose.yml
+.dockerignore
