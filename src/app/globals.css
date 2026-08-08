@@ -1,0 +1,360 @@
+@import 'tailwindcss';
+/* Enter/exit keyframes for Radix `data-[state]` transitions. */
+@import 'tw-animate-css';
+
+/* next-themes toggles a class on <html>; Tailwind v4 needs to be told. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Sadaqa+ design tokens
+
+   Two brand hues carry the whole system:
+     emerald  — action, growth, "good happening"
+     blue     — trust, verification, institutional
+   Navy is the ink; everything else is a neutral ramp tuned to sit calmly
+   behind humanitarian content rather than compete with it.
+--------------------------------------------------------------------------- */
+
+@theme {
+  --color-emerald-50: #ecfdf3;
+  --color-emerald-100: #d1fae0;
+  --color-emerald-200: #a7f3c5;
+  --color-emerald-300: #6ee7a5;
+  --color-emerald-400: #34d37f;
+  --color-emerald-500: #16a34a;
+  --color-emerald-600: #128a3f;
+  --color-emerald-700: #106f34;
+  --color-emerald-800: #0f582c;
+  --color-emerald-900: #0d4826;
+
+  --color-royal-50: #eff5ff;
+  --color-royal-100: #dbe8fe;
+  --color-royal-200: #bfd6fe;
+  --color-royal-300: #93bbfd;
+  --color-royal-400: #6096fa;
+  --color-royal-500: #2563eb;
+  --color-royal-600: #1d4fd7;
+  --color-royal-700: #1a3fae;
+  --color-royal-800: #1b378a;
+  --color-royal-900: #1b326e;
+
+  --color-navy-950: #0b1220;
+  --color-navy-900: #0f172a;
+  --color-navy-800: #16203a;
+
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-arabic:
+    var(--font-noto-arabic), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1rem;
+  --radius-field: 0.625rem;
+
+  --shadow-soft: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 4px 16px -4px rgb(15 23 42 / 0.08);
+  --shadow-lifted: 0 2px 4px 0 rgb(15 23 42 / 0.04), 0 12px 32px -8px rgb(15 23 42 / 0.14);
+
+  --animate-fade-up: fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* --- Semantic surface tokens ---------------------------------------------
+   Defined as raw values on :root, redefined under .dark. Dark mode is a
+   separately tuned palette, not an inversion: surfaces stay slightly blue to
+   match the navy ink, and the brand greens are lifted so they keep contrast
+   against a dark ground.
+-------------------------------------------------------------------------- */
+
+:root {
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --surface-sunken: #f1f5f9;
+  --foreground: #0f172a;
+  --muted-foreground: #576076;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --ring: #16a34a;
+
+  --primary: #16a34a;
+  --primary-foreground: #ffffff;
+  --primary-soft: #ecfdf3;
+  --primary-soft-foreground: #106f34;
+
+  --accent: #2563eb;
+  --accent-foreground: #ffffff;
+  --accent-soft: #eff5ff;
+  --accent-soft-foreground: #1a3fae;
+
+  --danger: #dc2626;
+  --danger-foreground: #ffffff;
+  --danger-soft: #fef2f2;
+  --danger-soft-foreground: #b31616;
+
+  --warning: #b45309;
+  --warning-soft: #fffbeb;
+  --warning-soft-foreground: #92400e;
+
+  --success: #15803d;
+  --success-soft: #f0fdf4;
+  --success-soft-foreground: #14532d;
+
+  --info: #0369a1;
+  --info-soft: #f0f9ff;
+  --info-soft-foreground: #075985;
+
+  --overlay: rgb(15 23 42 / 0.55);
+}
+
+.dark {
+  --background: #0b1220;
+  --surface: #111a2e;
+  --surface-muted: #16203a;
+  --surface-sunken: #0e1729;
+  --foreground: #e9eef7;
+  --muted-foreground: #97a3ba;
+  --border: #24304c;
+  --border-strong: #33415f;
+  --ring: #34d37f;
+
+  --primary: #22b85a;
+  --primary-foreground: #04140a;
+  --primary-soft: #10281b;
+  --primary-soft-foreground: #6ee7a5;
+
+  --accent: #4a84f5;
+  --accent-foreground: #050c1c;
+  --accent-soft: #14213f;
+  --accent-soft-foreground: #93bbfd;
+
+  --danger: #f05252;
+  --danger-foreground: #1a0505;
+  --danger-soft: #351417;
+  --danger-soft-foreground: #fca5a5;
+
+  --warning: #eab308;
+  --warning-soft: #3a2a08;
+  --warning-soft-foreground: #fde68a;
+
+  --success: #34d37f;
+  --success-soft: #10281b;
+  --success-soft-foreground: #a7f3c5;
+
+  --info: #38bdf8;
+  --info-soft: #0c2537;
+  --info-soft-foreground: #bae6fd;
+
+  --overlay: rgb(2 6 16 / 0.7);
+}
+
+/* Expose the semantic tokens to Tailwind so `bg-surface`, `text-muted-fg`,
+   `border-border` etc. exist as real utilities. */
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-foreground: var(--foreground);
+  --color-muted-fg: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ring: var(--ring);
+
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-fg: var(--primary-soft-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-fg: var(--accent-soft-foreground);
+
+  --color-danger: var(--danger);
+  --color-danger-fg: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-soft-fg: var(--danger-soft-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-fg: var(--warning-soft-foreground);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-fg: var(--success-soft-foreground);
+
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-soft-fg: var(--info-soft-foreground);
+}
+
+/* --- Base ---------------------------------------------------------------- */
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Arabic gets its own face and a slightly larger optical size: the Latin
+     metrics leave Arabic looking undersized at the same px value. */
+  html[dir='rtl'] body {
+    font-family: var(--font-arabic);
+    font-size: 1.03125rem;
+    line-height: 1.75;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Never remove focus rings wholesale — only swap the default for ours. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: var(--primary-soft);
+    color: var(--primary-soft-foreground);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+    letter-spacing: -0.015em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@layer utilities {
+  /* Logical-property helpers so RTL flips without duplicated rules. */
+  .start-0 {
+    inset-inline-start: 0;
+  }
+  .end-0 {
+    inset-inline-end: 0;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .skeleton {
+    background-image: linear-gradient(
+      90deg,
+      var(--surface-sunken) 0%,
+      var(--surface-muted) 50%,
+      var(--surface-sunken) 100%
+    );
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+
+  /* Hides content visually while keeping it available to screen readers. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .scrollbar-slim {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+}
+
+/* --- Motion preferences ---------------------------------------------------
+   Respected globally rather than per-component, so a component that forgets
+   to check still behaves.
+-------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Leaflet is loaded as a plain stylesheet; these overrides keep the map
+   consistent with the design tokens in both themes. */
+.leaflet-container {
+  background: var(--surface-sunken);
+  font-family: var(--font-sans);
+  z-index: 0;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: var(--shadow-lifted);
+}
+
+.leaflet-bar a,
+.leaflet-bar a:hover {
+  background: var(--surface);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.dark .leaflet-tile-pane {
+  /* OSM raster tiles are light-only; damp them so they do not glare in dark
+     mode without inverting the map into something unreadable. */
+  filter: brightness(0.72) saturate(0.85) contrast(1.05);
+}

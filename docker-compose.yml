@@ -1,0 +1,79 @@
+# =============================================================================
+# Local development stack.
+#
+#   docker compose up -d db redis      # dependencies only, app runs on host
+#   docker compose --profile app up    # everything, including the built app
+#
+# The app service is opt-in via a profile so the common case (running
+# `npm run dev` on the host against these services) stays fast.
+# =============================================================================
+
+name: sadaqa
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sadaqa
+      POSTGRES_PASSWORD: sadaqa
+      POSTGRES_DB: sadaqa_app
+      # Deterministic collation so ORDER BY matches between machines.
+      POSTGRES_INITDB_ARGS: '--locale=C.UTF-8 --encoding=UTF8'
+    ports:
+      - '5432:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sadaqa -d sadaqa_app']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes', '--save', '60', '1']
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    profiles: ['app']
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://sadaqa:sadaqa@db:5432/sadaqa_app?schema=public
+      REDIS_URL: redis://redis:6379
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      # Required. Generate with:
+      #   node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      EMAIL_DRIVER: ${EMAIL_DRIVER:-log}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-none}
+      CRON_SECRET: ${CRON_SECRET:-}
+    ports:
+      - '3000:3000'
+    volumes:
+      # Only meaningful with STORAGE_DRIVER=local. Use S3 for multi-instance.
+      - storage_data:/app/.storage
+
+volumes:
+  db_data:
+  redis_data:
+  storage_data:

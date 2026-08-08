@@ -1,0 +1,1413 @@
+// Sadaqa+ — Algerian digital solidarity platform
+// PostgreSQL schema. Reference data only at first launch; zero demo activity.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum RoleName {
+  USER
+  DONOR
+  VOLUNTEER
+  ORGANIZATION
+  MODERATOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum Locale {
+  AR
+  FR
+  EN
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  EMAIL_CHANGE
+}
+
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum OrgMemberRole {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+enum PartnerApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum RequestStatus {
+  DRAFT
+  PENDING_REVIEW
+  UNDER_REVIEW
+  VERIFIED
+  ACTIVE
+  PARTIALLY_HELPED
+  COMPLETED
+  REJECTED
+  EXPIRED
+  ARCHIVED
+}
+
+enum UrgencyLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum LocationPrecision {
+  EXACT
+  APPROXIMATE
+  COMMUNE_ONLY
+}
+
+enum ContactMethod {
+  PLATFORM
+  EMAIL
+  PHONE
+  WHATSAPP
+}
+
+enum AssetVisibility {
+  PUBLIC
+  PRIVATE
+  MODERATORS_ONLY
+}
+
+enum CampaignStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum GoalType {
+  MONETARY
+  MATERIAL
+}
+
+enum EventStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ONGOING
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  WAITLISTED
+  CANCELLED
+  ATTENDED
+  NO_SHOW
+}
+
+enum ParticipantKind {
+  PARTICIPANT
+  VOLUNTEER
+  ORGANIZER
+}
+
+enum MissionStatus {
+  DRAFT
+  OPEN
+  FULL
+  CLOSED
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum DonationStatus {
+  PENDING
+  PROCESSING
+  CONFIRMED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum DonationIntentStatus {
+  OPEN
+  CONTACTED
+  FULFILLED
+  CANCELLED
+}
+
+enum ReportReason {
+  FRAUD
+  DUPLICATE
+  INAPPROPRIATE
+  MISLEADING
+  HARASSMENT
+  PRIVACY
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  UNDER_REVIEW
+  ACTION_TAKEN
+  DISMISSED
+}
+
+enum TargetType {
+  REQUEST
+  CAMPAIGN
+  EVENT
+  ORGANIZATION
+  USER
+  MESSAGE
+  MISSION
+  DONATION
+  CONVERSATION
+}
+
+enum NotificationType {
+  REQUEST_SUBMITTED
+  REQUEST_APPROVED
+  REQUEST_REJECTED
+  REQUEST_STATUS_CHANGED
+  CAMPAIGN_UPDATE
+  CAMPAIGN_APPROVED
+  CAMPAIGN_REJECTED
+  VOLUNTEER_APPLICATION_RECEIVED
+  VOLUNTEER_ACCEPTED
+  VOLUNTEER_REJECTED
+  EVENT_REMINDER
+  EVENT_REGISTRATION_CONFIRMED
+  EVENT_CANCELLED
+  ORGANIZATION_VERIFIED
+  ORGANIZATION_REJECTED
+  PARTNER_APPLICATION_RECEIVED
+  NEW_MESSAGE
+  REPORT_DECISION
+  DONATION_CONFIRMED
+  DONATION_INTENT_RECEIVED
+  SYSTEM_ANNOUNCEMENT
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  PUSH
+}
+
+enum CategoryKind {
+  REQUEST
+  CAMPAIGN
+  EVENT
+  MISSION
+}
+
+enum AuditAction {
+  USER_REGISTERED
+  USER_LOGIN
+  USER_LOGIN_FAILED
+  USER_LOGOUT
+  USER_PASSWORD_RESET_REQUESTED
+  USER_PASSWORD_CHANGED
+  USER_EMAIL_VERIFIED
+  USER_ROLE_GRANTED
+  USER_ROLE_REVOKED
+  USER_SUSPENDED
+  USER_REACTIVATED
+  USER_DELETED
+  ORGANIZATION_CREATED
+  ORGANIZATION_UPDATED
+  ORGANIZATION_VERIFIED
+  ORGANIZATION_REJECTED
+  ORGANIZATION_SUSPENDED
+  PARTNER_APPLICATION_SUBMITTED
+  PARTNER_APPLICATION_DECIDED
+  REQUEST_CREATED
+  REQUEST_SUBMITTED
+  REQUEST_STATUS_CHANGED
+  REQUEST_VERIFIED
+  REQUEST_REJECTED
+  REQUEST_DELETED
+  CAMPAIGN_CREATED
+  CAMPAIGN_STATUS_CHANGED
+  CAMPAIGN_UPDATED
+  EVENT_CREATED
+  EVENT_STATUS_CHANGED
+  EVENT_ATTENDANCE_RECORDED
+  MISSION_CREATED
+  MISSION_APPLICATION_DECIDED
+  DONATION_STATE_CHANGED
+  REPORT_CREATED
+  REPORT_DECIDED
+  SETTING_CHANGED
+  CATEGORY_CHANGED
+  FILE_UPLOADED
+  FILE_ACCESSED
+}
+
+// ---------------------------------------------------------------------------
+// Identity, roles, sessions
+// ---------------------------------------------------------------------------
+
+model User {
+  id                String     @id @default(uuid()) @db.Uuid
+  email             String     @unique
+  emailVerifiedAt   DateTime?
+  passwordHash      String
+  status            UserStatus @default(PENDING_VERIFICATION)
+  locale            Locale     @default(FR)
+  failedLoginCount  Int        @default(0)
+  lockedUntil       DateTime?
+  lastLoginAt       DateTime?
+  twoFactorSecret   String?
+  twoFactorEnabled  Boolean    @default(false)
+  onboardingDoneAt  DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime?
+
+  profile                Profile?
+  roles                  UserRole[]           @relation("UserRoleUser")
+  grantedRoles           UserRole[]           @relation("UserRoleGrantedBy")
+  sessions               Session[]
+  tokens                 VerificationToken[]
+  organizationMemberships OrganizationMember[]
+  requests               Request[]            @relation("RequestAuthor")
+  requestVerifications   RequestVerification[] @relation("RequestVerificationReviewer")
+  requestStatusEvents    RequestStatusEvent[]  @relation("RequestStatusActor")
+  campaigns              Campaign[]           @relation("CampaignCreator")
+  campaignUpdates        CampaignUpdate[]     @relation("CampaignUpdateAuthor")
+  events                 Event[]              @relation("EventCreator")
+  eventRegistrations     EventRegistration[]  @relation("EventRegistrationUser")
+  checkedInRegistrations EventRegistration[]  @relation("EventRegistrationCheckedInBy")
+  volunteerProfile       VolunteerProfile?
+  volunteerApplications  VolunteerApplication[] @relation("VolunteerApplicationUser")
+  reviewedApplications   VolunteerApplication[] @relation("VolunteerApplicationReviewer")
+  donations              Donation[]           @relation("DonationDonor")
+  donationIntents        DonationIntent[]     @relation("DonationIntentUser")
+  conversationMemberships ConversationMember[]
+  messages               Message[]            @relation("MessageSender")
+  notifications          Notification[]
+  notificationPreference NotificationPreference?
+  pushSubscriptions      PushSubscription[]
+  reportsFiled           Report[]             @relation("ReportReporter")
+  reportsModerated       Report[]             @relation("ReportModerator")
+  auditLogs              AuditLog[]           @relation("AuditActor")
+  savedItems             SavedItem[]
+  uploadedFiles          FileAsset[]          @relation("FileUploader")
+  partnerApplications    PartnerApplication[] @relation("PartnerApplicationSubmitter")
+  reviewedPartnerApps    PartnerApplication[] @relation("PartnerApplicationReviewer")
+  orgVerifications       OrganizationVerification[] @relation("OrgVerificationReviewer")
+  blocksMade             UserBlock[]          @relation("UserBlockBlocker")
+  blocksReceived         UserBlock[]          @relation("UserBlockBlocked")
+  settingChanges         SystemSetting[]      @relation("SettingUpdatedBy")
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Profile {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @unique @db.Uuid
+  firstName     String
+  lastName      String
+  displayName   String?
+  phone         String?
+  phonePublic   Boolean  @default(false)
+  emailPublic   Boolean  @default(false)
+  whatsapp      String?
+  whatsappPublic Boolean @default(false)
+  avatarId      String?  @db.Uuid
+  bio           String?
+  wilayaId      Int?
+  communeId     Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatar  FileAsset? @relation("ProfileAvatar", fields: [avatarId], references: [id], onDelete: SetNull)
+  wilaya  Wilaya?    @relation(fields: [wilayaId], references: [id], onDelete: SetNull)
+  commune Commune?   @relation(fields: [communeId], references: [id], onDelete: SetNull)
+
+  @@index([wilayaId])
+  @@index([communeId])
+  @@map("profiles")
+}
+
+model Role {
+  id          String     @id @default(uuid()) @db.Uuid
+  name        RoleName   @unique
+  description String
+  createdAt   DateTime   @default(now())
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  description String
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @db.Uuid
+  permissionId String @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  roleId      String   @db.Uuid
+  grantedById String?  @db.Uuid
+  grantedAt   DateTime @default(now())
+
+  user      User @relation("UserRoleUser", fields: [userId], references: [id], onDelete: Cascade)
+  role      Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  grantedBy User? @relation("UserRoleGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, roleId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+model Session {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @db.Uuid
+  tokenHash      String   @unique
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  lastSeenAt     DateTime @default(now())
+  revokedAt      DateTime?
+  ipHash         String?
+  userAgent      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  type       TokenType
+  tokenHash  String    @unique
+  payload    String?
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([expiresAt])
+  @@map("verification_tokens")
+}
+
+model UserBlock {
+  id        String   @id @default(uuid()) @db.Uuid
+  blockerId String   @db.Uuid
+  blockedId String   @db.Uuid
+  reason    String?
+  createdAt DateTime @default(now())
+
+  blocker User @relation("UserBlockBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("UserBlockBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@map("user_blocks")
+}
+
+// ---------------------------------------------------------------------------
+// Geography (reference data)
+// ---------------------------------------------------------------------------
+
+model Wilaya {
+  id        Int      @id
+  code      String   @unique
+  nameFr    String
+  nameAr    String
+  nameEn    String
+  latitude  Float?
+  longitude Float?
+
+  communes         Commune[]
+  profiles         Profile[]
+  organizations    Organization[]
+  requests         Request[]
+  campaigns        Campaign[]
+  events           Event[]
+  missions         VolunteerMission[]
+  volunteerProfiles VolunteerProfile[]
+  partnerApplications PartnerApplication[]
+  orgCoverage      OrganizationCoverage[]
+
+  @@map("wilayas")
+}
+
+model Commune {
+  id       Int     @id
+  wilayaId Int
+  nameFr   String
+  nameAr   String
+  nameEn   String
+  dairaFr  String?
+  dairaAr  String?
+
+  wilaya            Wilaya             @relation(fields: [wilayaId], references: [id], onDelete: Cascade)
+  profiles          Profile[]
+  organizations     Organization[]
+  requests          Request[]
+  campaigns         Campaign[]
+  events            Event[]
+  missions          VolunteerMission[]
+  volunteerProfiles VolunteerProfile[]
+  orgCoverage       OrganizationCoverage[]
+
+  @@unique([wilayaId, nameFr])
+  @@index([wilayaId])
+  @@map("communes")
+}
+
+// ---------------------------------------------------------------------------
+// Taxonomy (reference data, admin-editable)
+// ---------------------------------------------------------------------------
+
+model Category {
+  id        String       @id @default(uuid()) @db.Uuid
+  kind      CategoryKind
+  slug      String
+  nameFr    String
+  nameAr    String
+  nameEn    String
+  icon      String?
+  color     String?
+  sortOrder Int          @default(0)
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  requests  Request[]
+  campaigns Campaign[]
+  events    Event[]
+  missions  VolunteerMission[]
+
+  @@unique([kind, slug])
+  @@index([kind, isActive])
+  @@map("categories")
+}
+
+// ---------------------------------------------------------------------------
+// Files
+// ---------------------------------------------------------------------------
+
+model FileAsset {
+  id            String          @id @default(uuid()) @db.Uuid
+  storageKey    String          @unique
+  originalName  String
+  mimeType      String
+  sizeBytes     Int
+  checksum      String?
+  visibility    AssetVisibility @default(PRIVATE)
+  scanStatus    String          @default("PENDING")
+  scanReport    String?
+  uploadedById  String?         @db.Uuid
+  createdAt     DateTime        @default(now())
+  deletedAt     DateTime?
+
+  uploadedBy       User?                @relation("FileUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  profileAvatars   Profile[]            @relation("ProfileAvatar")
+  organizationLogos Organization[]      @relation("OrganizationLogo")
+  requestAttachments RequestAttachment[]
+  campaignMedia    CampaignMedia[]
+  campaignCovers   Campaign[]           @relation("CampaignCover")
+  eventCovers      Event[]              @relation("EventCover")
+  messageAttachments MessageAttachment[]
+  partnerAppDocs   PartnerApplicationDocument[]
+  updateMedia      CampaignUpdateMedia[]
+
+  @@index([uploadedById])
+  @@index([visibility])
+  @@map("file_assets")
+}
+
+// ---------------------------------------------------------------------------
+// Organizations
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id                 String             @id @default(uuid()) @db.Uuid
+  slug               String             @unique
+  legalName          String
+  publicName         String
+  description        String
+  logoId             String?            @db.Uuid
+  email              String
+  phone              String?
+  website            String?
+  facebook           String?
+  instagram          String?
+  linkedin           String?
+  wilayaId           Int?
+  communeId          Int?
+  address            String?
+  areasOfWork        String[]
+  registrationNumber String?
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedAt         DateTime?
+  isSadaqaTeam       Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+
+  logo          FileAsset?  @relation("OrganizationLogo", fields: [logoId], references: [id], onDelete: SetNull)
+  wilaya        Wilaya?     @relation(fields: [wilayaId], references: [id], onDelete: SetNull)
+  commune       Commune?    @relation(fields: [communeId], references: [id], onDelete: SetNull)
+
+  members       OrganizationMember[]
+  coverage      OrganizationCoverage[]
+  verifications OrganizationVerification[]
+  requests      Request[]
+  campaigns     Campaign[]
+  events        Event[]
+  missions      VolunteerMission[]
+  donations     Donation[]
+  application   PartnerApplication?
+
+  @@index([verificationStatus])
+  @@index([wilayaId])
+  @@index([deletedAt])
+  @@map("organizations")
+}
+
+model OrganizationCoverage {
+  organizationId String @db.Uuid
+  wilayaId       Int
+  communeId      Int?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  wilaya       Wilaya       @relation(fields: [wilayaId], references: [id], onDelete: Cascade)
+  commune      Commune?     @relation(fields: [communeId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, wilayaId])
+  @@map("organization_coverage")
+}
+
+model OrganizationMember {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @db.Uuid
+  userId         String        @db.Uuid
+  role           OrgMemberRole @default(MEMBER)
+  title          String?
+  joinedAt       DateTime      @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
+model OrganizationVerification {
+  id             String             @id @default(uuid()) @db.Uuid
+  organizationId String             @db.Uuid
+  reviewerId     String?            @db.Uuid
+  decision       VerificationStatus
+  reason         String?
+  evidenceRef    String?
+  createdAt      DateTime           @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reviewer     User?        @relation("OrgVerificationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@map("organization_verifications")
+}
+
+model PartnerApplication {
+  id                 String                   @id @default(uuid()) @db.Uuid
+  organizationName   String
+  contactPersonName  String
+  contactEmail       String
+  contactPhone       String
+  wilayaId           Int
+  areaOfWork         String
+  description        String
+  website            String?
+  socialLinks        String?
+  registrationNumber String?
+  status             PartnerApplicationStatus @default(PENDING)
+  submittedById      String?                  @db.Uuid
+  reviewerId         String?                  @db.Uuid
+  reviewedAt         DateTime?
+  decisionReason     String?
+  organizationId     String?                  @unique @db.Uuid
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  wilaya       Wilaya        @relation(fields: [wilayaId], references: [id])
+  submittedBy  User?         @relation("PartnerApplicationSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  reviewer     User?         @relation("PartnerApplicationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  documents    PartnerApplicationDocument[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("partner_applications")
+}
+
+model PartnerApplicationDocument {
+  id            String   @id @default(uuid()) @db.Uuid
+  applicationId String   @db.Uuid
+  fileId        String   @db.Uuid
+  label         String
+  createdAt     DateTime @default(now())
+
+  application PartnerApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  file        FileAsset          @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@map("partner_application_documents")
+}
+
+// ---------------------------------------------------------------------------
+// Help requests
+// ---------------------------------------------------------------------------
+
+model Request {
+  id                String            @id @default(uuid()) @db.Uuid
+  reference         String            @unique
+  slug              String            @unique
+  title             String
+  description       String
+  categoryId        String            @db.Uuid
+  status            RequestStatus     @default(DRAFT)
+  urgency           UrgencyLevel      @default(MEDIUM)
+  quantity          String?
+  beneficiaryCount  Int?
+  authorId          String            @db.Uuid
+  organizationId    String?           @db.Uuid
+  wilayaId          Int
+  communeId         Int?
+  addressPrivate    String?
+  locationPrecision LocationPrecision @default(COMMUNE_ONLY)
+  latitude          Float?
+  longitude         Float?
+  contactMethod     ContactMethod     @default(PLATFORM)
+  contactPhone      String?
+  contactEmail      String?
+  contactWhatsapp   String?
+  contactPublic     Boolean           @default(false)
+  helpedCount       Int               @default(0)
+  viewCount         Int               @default(0)
+  publishedAt       DateTime?
+  expiresAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deletedAt         DateTime?
+
+  category     Category      @relation(fields: [categoryId], references: [id])
+  author       User          @relation("RequestAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  wilaya       Wilaya        @relation(fields: [wilayaId], references: [id])
+  commune      Commune?      @relation(fields: [communeId], references: [id], onDelete: SetNull)
+
+  attachments   RequestAttachment[]
+  verifications RequestVerification[]
+  statusEvents  RequestStatusEvent[]
+  intents       DonationIntent[]
+
+  @@index([status, publishedAt])
+  @@index([wilayaId, status])
+  @@index([categoryId, status])
+  @@index([urgency, status])
+  @@index([authorId])
+  @@index([organizationId])
+  @@index([deletedAt])
+  @@map("requests")
+}
+
+model RequestAttachment {
+  id         String          @id @default(uuid()) @db.Uuid
+  requestId  String          @db.Uuid
+  fileId     String          @db.Uuid
+  label      String?
+  visibility AssetVisibility @default(MODERATORS_ONLY)
+  createdAt  DateTime        @default(now())
+
+  request Request   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  file    FileAsset @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@map("request_attachments")
+}
+
+model RequestVerification {
+  id          String             @id @default(uuid()) @db.Uuid
+  requestId   String             @db.Uuid
+  reviewerId  String?            @db.Uuid
+  decision    VerificationStatus
+  reason      String?
+  evidenceRef String?
+  createdAt   DateTime           @default(now())
+
+  request  Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  reviewer User?   @relation("RequestVerificationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([requestId])
+  @@map("request_verifications")
+}
+
+model RequestStatusEvent {
+  id         String        @id @default(uuid()) @db.Uuid
+  requestId  String        @db.Uuid
+  fromStatus RequestStatus?
+  toStatus   RequestStatus
+  actorId    String?       @db.Uuid
+  note       String?
+  createdAt  DateTime      @default(now())
+
+  request Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  actor   User?   @relation("RequestStatusActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([requestId, createdAt])
+  @@map("request_status_events")
+}
+
+// ---------------------------------------------------------------------------
+// Campaigns
+// ---------------------------------------------------------------------------
+
+model Campaign {
+  id             String         @id @default(uuid()) @db.Uuid
+  slug           String         @unique
+  title          String
+  summary        String
+  description    String
+  categoryId     String         @db.Uuid
+  status         CampaignStatus @default(DRAFT)
+  goalType       GoalType       @default(MONETARY)
+  targetAmount   Decimal?       @db.Decimal(14, 2)
+  targetQuantity Int?
+  unitLabel      String?
+  currency       String         @default("DZD")
+  coverId        String?        @db.Uuid
+  organizationId String?        @db.Uuid
+  createdById    String         @db.Uuid
+  wilayaId       Int?
+  communeId      Int?
+  latitude       Float?
+  longitude      Float?
+  startDate      DateTime
+  endDate        DateTime?
+  publishedAt    DateTime?
+  completedAt    DateTime?
+  viewCount      Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+
+  category     Category      @relation(fields: [categoryId], references: [id])
+  cover        FileAsset?    @relation("CampaignCover", fields: [coverId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdBy    User          @relation("CampaignCreator", fields: [createdById], references: [id])
+  wilaya       Wilaya?       @relation(fields: [wilayaId], references: [id], onDelete: SetNull)
+  commune      Commune?      @relation(fields: [communeId], references: [id], onDelete: SetNull)
+
+  media     CampaignMedia[]
+  updates   CampaignUpdate[]
+  donations Donation[]
+  intents   DonationIntent[]
+  events    Event[]
+  missions  VolunteerMission[]
+
+  @@index([status, publishedAt])
+  @@index([wilayaId, status])
+  @@index([categoryId, status])
+  @@index([organizationId])
+  @@index([deletedAt])
+  @@map("campaigns")
+}
+
+model CampaignMedia {
+  id         String   @id @default(uuid()) @db.Uuid
+  campaignId String   @db.Uuid
+  fileId     String   @db.Uuid
+  caption    String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  campaign Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  file     FileAsset @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@map("campaign_media")
+}
+
+model CampaignUpdate {
+  id         String   @id @default(uuid()) @db.Uuid
+  campaignId String   @db.Uuid
+  authorId   String   @db.Uuid
+  title      String
+  content    String
+  publishedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  campaign Campaign              @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  author   User                  @relation("CampaignUpdateAuthor", fields: [authorId], references: [id])
+  media    CampaignUpdateMedia[]
+
+  @@index([campaignId, publishedAt])
+  @@map("campaign_updates")
+}
+
+model CampaignUpdateMedia {
+  id       String @id @default(uuid()) @db.Uuid
+  updateId String @db.Uuid
+  fileId   String @db.Uuid
+  caption  String?
+
+  update CampaignUpdate @relation(fields: [updateId], references: [id], onDelete: Cascade)
+  file   FileAsset      @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([updateId])
+  @@map("campaign_update_media")
+}
+
+// ---------------------------------------------------------------------------
+// Events
+// ---------------------------------------------------------------------------
+
+model Event {
+  id             String      @id @default(uuid()) @db.Uuid
+  slug           String      @unique
+  title          String
+  summary        String
+  description    String
+  categoryId     String      @db.Uuid
+  status         EventStatus @default(DRAFT)
+  coverId        String?     @db.Uuid
+  organizationId String?     @db.Uuid
+  campaignId     String?     @db.Uuid
+  createdById    String      @db.Uuid
+  wilayaId       Int
+  communeId      Int?
+  venue          String?
+  latitude       Float?
+  longitude      Float?
+  startsAt       DateTime
+  endsAt         DateTime
+  capacity       Int?
+  volunteerSlots Int?
+  requirements   String?
+  attendanceSecret String
+  publishedAt    DateTime?
+  reportContent  String?
+  reportPublishedAt DateTime?
+  viewCount      Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  deletedAt      DateTime?
+
+  category     Category      @relation(fields: [categoryId], references: [id])
+  cover        FileAsset?    @relation("EventCover", fields: [coverId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  campaign     Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdBy    User          @relation("EventCreator", fields: [createdById], references: [id])
+  wilaya       Wilaya        @relation(fields: [wilayaId], references: [id])
+  commune      Commune?      @relation(fields: [communeId], references: [id], onDelete: SetNull)
+
+  registrations EventRegistration[]
+
+  @@index([status, startsAt])
+  @@index([wilayaId, status])
+  @@index([organizationId])
+  @@index([deletedAt])
+  @@map("events")
+}
+
+model EventRegistration {
+  id            String             @id @default(uuid()) @db.Uuid
+  eventId       String             @db.Uuid
+  userId        String             @db.Uuid
+  kind          ParticipantKind    @default(PARTICIPANT)
+  status        RegistrationStatus @default(REGISTERED)
+  ticketCode    String             @unique
+  note          String?
+  checkedInAt   DateTime?
+  checkedInById String?            @db.Uuid
+  hoursLogged   Decimal?           @db.Decimal(6, 2)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  event       Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user        User  @relation("EventRegistrationUser", fields: [userId], references: [id], onDelete: Cascade)
+  checkedInBy User? @relation("EventRegistrationCheckedInBy", fields: [checkedInById], references: [id], onDelete: SetNull)
+
+  @@unique([eventId, userId])
+  @@index([eventId, status])
+  @@index([userId])
+  @@map("event_registrations")
+}
+
+// ---------------------------------------------------------------------------
+// Volunteering
+// ---------------------------------------------------------------------------
+
+model VolunteerProfile {
+  id                 String   @id @default(uuid()) @db.Uuid
+  userId             String   @unique @db.Uuid
+  skills             String[]
+  languages          String[]
+  availability       String[]
+  hasTransport       Boolean  @default(false)
+  experience         String?
+  preferredActivities String[]
+  wilayaId           Int?
+  communeId          Int?
+  isSearchable       Boolean  @default(true)
+  totalHours         Decimal  @default(0) @db.Decimal(8, 2)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wilaya  Wilaya?  @relation(fields: [wilayaId], references: [id], onDelete: SetNull)
+  commune Commune? @relation(fields: [communeId], references: [id], onDelete: SetNull)
+
+  @@index([wilayaId])
+  @@map("volunteer_profiles")
+}
+
+model VolunteerMission {
+  id               String        @id @default(uuid()) @db.Uuid
+  slug             String        @unique
+  title            String
+  description      String
+  categoryId       String        @db.Uuid
+  organizationId   String        @db.Uuid
+  campaignId       String?       @db.Uuid
+  status           MissionStatus @default(DRAFT)
+  volunteersNeeded Int
+  volunteersAccepted Int         @default(0)
+  wilayaId         Int
+  communeId        Int?
+  venue            String?
+  startsAt         DateTime
+  endsAt           DateTime?
+  requirements     String?
+  publishedAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
+
+  category     Category     @relation(fields: [categoryId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  campaign     Campaign?    @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  wilaya       Wilaya       @relation(fields: [wilayaId], references: [id])
+  commune      Commune?     @relation(fields: [communeId], references: [id], onDelete: SetNull)
+
+  applications VolunteerApplication[]
+
+  @@index([status, startsAt])
+  @@index([wilayaId, status])
+  @@index([organizationId])
+  @@map("volunteer_missions")
+}
+
+model VolunteerApplication {
+  id          String            @id @default(uuid()) @db.Uuid
+  missionId   String            @db.Uuid
+  userId      String            @db.Uuid
+  status      ApplicationStatus @default(PENDING)
+  message     String?
+  reviewerId  String?           @db.Uuid
+  reviewedAt  DateTime?
+  decisionNote String?
+  hoursLogged Decimal?          @db.Decimal(6, 2)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  mission  VolunteerMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user     User             @relation("VolunteerApplicationUser", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User?            @relation("VolunteerApplicationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@unique([missionId, userId])
+  @@index([userId])
+  @@index([status])
+  @@map("volunteer_applications")
+}
+
+// ---------------------------------------------------------------------------
+// Donations
+// ---------------------------------------------------------------------------
+
+model Donation {
+  id             String         @id @default(uuid()) @db.Uuid
+  reference      String         @unique
+  campaignId     String?        @db.Uuid
+  organizationId String?        @db.Uuid
+  donorId        String?        @db.Uuid
+  status         DonationStatus @default(PENDING)
+  kind           GoalType       @default(MONETARY)
+  amount         Decimal?       @db.Decimal(14, 2)
+  currency       String         @default("DZD")
+  quantity       Int?
+  unitLabel      String?
+  isAnonymous    Boolean        @default(true)
+  provider       String
+  providerRef    String?
+  failureReason  String?
+  confirmedAt    DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  campaign     Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  donor        User?         @relation("DonationDonor", fields: [donorId], references: [id], onDelete: SetNull)
+
+  receipt      DonationReceipt?
+  stateEvents  DonationStateEvent[]
+
+  @@index([campaignId, status])
+  @@index([donorId])
+  @@index([status])
+  @@map("donations")
+}
+
+model DonationStateEvent {
+  id         String         @id @default(uuid()) @db.Uuid
+  donationId String         @db.Uuid
+  fromStatus DonationStatus?
+  toStatus   DonationStatus
+  reason     String?
+  createdAt  DateTime       @default(now())
+
+  donation Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+
+  @@index([donationId])
+  @@map("donation_state_events")
+}
+
+model DonationReceipt {
+  id         String   @id @default(uuid()) @db.Uuid
+  donationId String   @unique @db.Uuid
+  receiptNo  String   @unique
+  issuedAt   DateTime @default(now())
+  snapshot   Json
+
+  donation Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+
+  @@map("donation_receipts")
+}
+
+model DonationIntent {
+  id             String               @id @default(uuid()) @db.Uuid
+  userId         String?              @db.Uuid
+  campaignId     String?              @db.Uuid
+  requestId      String?              @db.Uuid
+  status         DonationIntentStatus @default(OPEN)
+  kind           GoalType             @default(MATERIAL)
+  amount         Decimal?             @db.Decimal(14, 2)
+  quantity       Int?
+  unitLabel      String?
+  message        String?
+  contactEmail   String?
+  contactPhone   String?
+  handledAt      DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  user     User?     @relation("DonationIntentUser", fields: [userId], references: [id], onDelete: SetNull)
+  campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  request  Request?  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, status])
+  @@index([requestId, status])
+  @@index([userId])
+  @@map("donation_intents")
+}
+
+// ---------------------------------------------------------------------------
+// Messaging
+// ---------------------------------------------------------------------------
+
+model Conversation {
+  id           String     @id @default(uuid()) @db.Uuid
+  subject      String?
+  targetType   TargetType?
+  targetId     String?    @db.Uuid
+  isLocked     Boolean    @default(false)
+  lastMessageAt DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  members  ConversationMember[]
+  messages Message[]
+
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+model ConversationMember {
+  id             String    @id @default(uuid()) @db.Uuid
+  conversationId String    @db.Uuid
+  userId         String    @db.Uuid
+  lastReadAt     DateTime?
+  mutedAt        DateTime?
+  leftAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_members")
+}
+
+model Message {
+  id             String    @id @default(uuid()) @db.Uuid
+  conversationId String    @db.Uuid
+  senderId       String    @db.Uuid
+  body           String
+  isHidden       Boolean   @default(false)
+  hiddenReason   String?
+  createdAt      DateTime  @default(now())
+  editedAt       DateTime?
+  deletedAt      DateTime?
+
+  conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User                @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  attachments  MessageAttachment[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model MessageAttachment {
+  id        String   @id @default(uuid()) @db.Uuid
+  messageId String   @db.Uuid
+  fileId    String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  message Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  file    FileAsset @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("message_attachments")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id         String           @id @default(uuid()) @db.Uuid
+  userId     String           @db.Uuid
+  type       NotificationType
+  title      String
+  body       String
+  targetType TargetType?
+  targetId   String?          @db.Uuid
+  url        String?
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @unique @db.Uuid
+  inAppEnabled  Boolean  @default(true)
+  emailEnabled  Boolean  @default(true)
+  pushEnabled   Boolean  @default(false)
+  mutedTypes    NotificationType[]
+  urgentNearby  Boolean  @default(true)
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  lastUsedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+model OutboxMessage {
+  id          String    @id @default(uuid()) @db.Uuid
+  channel     NotificationChannel
+  recipient   String
+  templateKey String
+  payload     Json
+  attempts    Int       @default(0)
+  lastError   String?
+  sentAt      DateTime?
+  scheduledFor DateTime @default(now())
+  createdAt   DateTime  @default(now())
+
+  @@index([sentAt, scheduledFor])
+  @@map("outbox_messages")
+}
+
+// ---------------------------------------------------------------------------
+// Moderation, audit, settings
+// ---------------------------------------------------------------------------
+
+model Report {
+  id          String       @id @default(uuid()) @db.Uuid
+  reporterId  String?      @db.Uuid
+  targetType  TargetType
+  targetId    String       @db.Uuid
+  reason      ReportReason
+  description String?
+  status      ReportStatus @default(OPEN)
+  moderatorId String?      @db.Uuid
+  resolution  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  reporter  User? @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  moderator User? @relation("ReportModerator", fields: [moderatorId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@map("reports")
+}
+
+model AuditLog {
+  id         String      @id @default(uuid()) @db.Uuid
+  actorId    String?     @db.Uuid
+  action     AuditAction
+  targetType TargetType?
+  targetId   String?
+  metadata   Json?
+  ipHash     String?
+  userAgent  String?
+  createdAt  DateTime    @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
+
+model SavedItem {
+  id         String     @id @default(uuid()) @db.Uuid
+  userId     String     @db.Uuid
+  targetType TargetType
+  targetId   String     @db.Uuid
+  createdAt  DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId])
+  @@map("saved_items")
+}
+
+model SystemSetting {
+  key         String   @id
+  value       Json
+  description String?
+  updatedById String?  @db.Uuid
+  updatedAt   DateTime @updatedAt
+
+  updatedBy User? @relation("SettingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("system_settings")
+}
+
+model Testimonial {
+  id          String    @id @default(uuid()) @db.Uuid
+  authorName  String
+  authorRole  String?
+  content     String
+  isApproved  Boolean   @default(false)
+  approvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([isApproved])
+  @@map("testimonials")
+}
